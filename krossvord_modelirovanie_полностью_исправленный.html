@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кроссворд по моделированию</title>
+<style>
+  :root {
+    --bg: #f4f7fb;
+    --card: #ffffff;
+    --text: #172033;
+    --muted: #68738a;
+    --accent: #5b5bd6;
+    --accent2: #7c3aed;
+    --line: #d9deea;
+    --good: #16a34a;
+    --bad: #dc2626;
+    --black: #202636;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(circle at 10% 10%, #e9e8ff 0, transparent 28%),
+      radial-gradient(circle at 90% 20%, #e1f1ff 0, transparent 25%),
+      var(--bg);
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1180px; margin: auto; padding: 34px 20px 50px; }
+  header { text-align: center; margin-bottom: 26px; }
+  .badge {
+    display: inline-block; padding: 7px 12px; border-radius: 999px;
+    background: #ecebff; color: #4c45b8; font-weight: 700; font-size: 13px;
+  }
+  h1 { font-size: clamp(30px, 5vw, 48px); margin: 12px 0 8px; }
+  .subtitle { color: var(--muted); margin: 0 auto; max-width: 650px; line-height: 1.55; }
+  .layout {
+    display: grid; grid-template-columns: minmax(300px, 700px) 1fr;
+    gap: 24px; align-items: start;
+  }
+  .card {
+    background: rgba(255,255,255,.88); backdrop-filter: blur(12px);
+    border: 1px solid rgba(217,222,234,.9); border-radius: 24px;
+    box-shadow: 0 16px 45px rgba(34,45,80,.08);
+    padding: 22px;
+  }
+  .board-wrap { overflow: auto; }
+  #grid {
+    display: grid;
+    gap: 3px;
+    width: max-content;
+    margin: 0 auto;
+    padding: 5px;
+  }
+  .cell {
+    width: 42px; height: 42px; position: relative;
+    border-radius: 7px; overflow: hidden;
+  }
+  .block { background: var(--black); }
+  .open { background: #fff; border: 1px solid #cfd5e2; }
+  .cell input {
+    width: 100%; height: 100%; border: 0; outline: none; text-align: center;
+    background: transparent; color: var(--text); font-size: 23px; font-weight: 800;
+    text-transform: uppercase; padding-top: 4px;
+  }
+  .cell:focus-within { box-shadow: 0 0 0 3px #a5a4ff; z-index: 2; }
+  .num {
+    position: absolute; left: 4px; top: 2px; font-size: 9px;
+    font-weight: 800; color: #69738a; pointer-events: none;
+  }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+  button {
+    border: 0; border-radius: 12px; padding: 11px 15px; cursor: pointer;
+    font-weight: 750; font-size: 14px; transition: .18s transform, .18s opacity;
+  }
+  button:hover { transform: translateY(-1px); }
+  .primary { background: var(--accent); color: white; }
+  .secondary { background: #eef0f6; color: var(--text); }
+  .success { background: #dcfce7; color: #166534; }
+  .status {
+    margin-top: 15px; padding: 13px 15px; border-radius: 13px;
+    background: #f4f5f9; color: var(--muted); min-height: 46px;
+  }
+  .status.good { background: #ecfdf3; color: #166534; }
+  .status.bad { background: #fff1f2; color: #991b1b; }
+  h2 { margin: 0 0 14px; font-size: 22px; }
+  .section-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted); font-weight: 800; margin: 18px 0 8px;
+  }
+  .clues { display: grid; gap: 8px; }
+  .clue {
+    padding: 11px 12px; border-radius: 12px; background: #f7f8fb;
+    border: 1px solid transparent; cursor: pointer; line-height: 1.35;
+  }
+  .clue:hover { border-color: #c8c8ff; background: #f3f2ff; }
+  .clue.active { border-color: #9b9af3; background: #efefff; }
+  .clue strong { color: var(--accent); margin-right: 6px; }
+  .hint { color: var(--muted); font-size: 13px; margin-top: 15px; line-height: 1.45; }
+  .score { font-size: 17px; font-weight: 800; }
+  .footer { text-align: center; color: var(--muted); margin-top: 22px; font-size: 13px; }
+  @media (max-width: 850px) {
+    .layout { grid-template-columns: 1fr; }
+    .cell { width: 36px; height: 36px; }
+    .cell input { font-size: 20px; }
+  }
+  @media (max-width: 420px) {
+    .wrap { padding: 22px 10px 35px; }
+    .card { padding: 15px; border-radius: 18px; }
+    .cell { width: 30px; height: 30px; }
+    .cell input { font-size: 17px; }
+    .num { font-size: 7px; left: 3px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="badge">ИНТЕРАКТИВНЫЙ КРОССВОРД</span>
+    <h1>Моделирование</h1>
+    <p class="subtitle">Проверь знания терминов, связанных с созданием моделей, параметрами, алгоритмами и компьютерной симуляцией.</p>
+  </header>
+
+  <main class="layout">
+    <section class="card">
+      <div class="board-wrap"><div id="grid"></div></div>
+      <div class="controls">
+        <button class="primary" onclick="checkAnswers()">Проверить</button>
+        <button class="secondary" onclick="showHint()">Подсказка</button>
+        <button class="secondary" onclick="clearGrid()">Очистить</button>
+        <button class="success" onclick="showAnswers()">Показать ответы</button>
+      </div>
+      <div id="status" class="status">Заполни клетки и нажми «Проверить».</div>
+    </section>
+
+    <aside class="card">
+      <h2>Вопросы</h2>
+      <div class="score" id="score">Заполнено: 0 / 9</div>
+
+      <div class="section-title">По горизонтали</div>
+      <div class="clues" id="across"></div>
+
+      <div class="section-title">По вертикали</div>
+      <div class="clues" id="down"></div>
+
+      <p class="hint">Совет: нажми на вопрос — первая клетка соответствующего слова подсветится.</p>
+    </aside>
+  </main>
+  <div class="footer">Учебный мини‑сайт • тема: моделирование</div>
+</div>
+
+<script>
+const ROWS = 18, COLS = 18;
+
+const words = [
+  {id:1, r:7,  c:4, d:'across', a:'МОДЕЛЬ', q:'Упрощённое представление объекта или процесса.'},
+  {id:2, r:13, c:6, d:'across', a:'ПАРАМЕТР', q:'Величина, задающая свойство или условие модели.'},
+  {id:3, r:4,  c:5, d:'down',   a:'АЛГОРИТМ', q:'Последовательность действий для решения задачи.'},
+  {id:4, r:12, c:9, d:'down',   a:'ДАННЫЕ', q:'Информация, которую используют при построении модели.'},
+  {id:5, r:2,  c:4, d:'across', a:'СИСТЕМА', q:'Совокупность взаимосвязанных элементов, которую можно исследовать.'},
+  {id:6, r:3,  c:8, d:'down',   a:'СИМУЛЯЦИЯ', q:'Компьютерное воспроизведение поведения объекта или процесса.'},
+  {id:7, r:4,  c:7, d:'down',   a:'МАТЕМАТИКА', q:'Наука, языком которой часто описывают количественные модели.'},
+  {id:8, r:1,  c:0, d:'across', a:'ЛОГИКА', q:'Правила правильного рассуждения, используемые при построении алгоритмов.'},
+  {id:9, r:0,  c:4, d:'down',   a:'ЭКСПЕРИМЕНТ', q:'Исследование, при котором модель или объект подвергают заданным воздействиям.'}
+];
+
+const grid = Array.from({length: ROWS}, () => Array(COLS).fill(null));
+
+for (const w of words) {
+  [...w.a].forEach((ch, i) => {
+    const r = w.r + (w.d === 'down' ? i : 0);
+    const c = w.c + (w.d === 'across' ? i : 0);
+
+    if (r < 0 || r >= ROWS || c < 0 || c >= COLS) {
+      throw new Error(`Слово №${w.id} выходит за пределы сетки`);
+    }
+
+    if (grid[r][c] && grid[r][c].ch !== ch) {
+      throw new Error(`Ошибка пересечения у слова №${w.id}: ожидалась буква ${grid[r][c].ch}, получена ${ch}`);
+    }
+
+    grid[r][c] = grid[r][c] || {ch, nums: []};
+  });
+}
+
+const starts = new Map();
+for (const w of words) starts.set(`${w.r},${w.c}`, w.id);
+
+const gridEl = document.getElementById('grid');
+gridEl.style.gridTemplateColumns = `repeat(${COLS}, 42px)`;
+
+const inputs = {};
+for (let r=0; r<ROWS; r++) {
+  for (let c=0; c<COLS; c++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell ' + (grid[r][c] ? 'open' : 'block');
+
+    if (grid[r][c]) {
+      const key = `${r}-${c}`;
+
+      if (starts.has(`${r},${c}`)) {
+        const n = document.createElement('span');
+        n.className = 'num';
+        n.textContent = starts.get(`${r},${c}`);
+        cell.appendChild(n);
+      }
+
+      const inp = document.createElement('input');
+      inp.maxLength = 1;
+      inp.autocomplete = 'off';
+      inp.setAttribute('aria-label', `Клетка ${r+1}, ${c+1}`);
+      inp.dataset.r = r;
+      inp.dataset.c = c;
+
+      inp.addEventListener('input', e => {
+        e.target.value = e.target.value.replace(/[^А-ЯЁа-яё]/g,'').toUpperCase();
+        updateScore();
+        if (e.target.value) focusNext(r,c);
+      });
+
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !inp.value) focusPrev(r,c);
+        if (e.key === 'ArrowRight') focusCell(r,c+1);
+        if (e.key === 'ArrowLeft') focusCell(r,c-1);
+        if (e.key === 'ArrowDown') focusCell(r+1,c);
+        if (e.key === 'ArrowUp') focusCell(r-1,c);
+      });
+
+      cell.appendChild(inp);
+      inputs[key] = inp;
+    }
+
+    gridEl.appendChild(cell);
+  }
+}
+
+function renderClues(kind) {
+  const box = document.getElementById(kind);
+  words.filter(w=>w.d===kind).forEach(w=>{
+    const div=document.createElement('div');
+    div.className='clue';
+    div.dataset.id=w.id;
+    div.innerHTML=`<strong>${w.id}.</strong>${w.q}`;
+    div.onclick=()=>{ highlightWord(w); focusCell(w.r,w.c); };
+    box.appendChild(div);
+  });
+}
+renderClues('across');
+renderClues('down');
+
+function focusCell(r,c) {
+  const i=inputs[`${r}-${c}`];
+  if(i){ i.focus(); highlightCell(r,c); }
+}
+
+function focusNext(r,c) {
+  for(let x=c+1;x<COLS;x++) if(inputs[`${r}-${x}`]) return focusCell(r,x);
+  for(let y=r+1;y<ROWS;y++)
+    for(let x=0;x<COLS;x++)
+      if(inputs[`${y}-${x}`]) return focusCell(y,x);
+}
+
+function focusPrev(r,c) {
+  for(let x=c-1;x>=0;x--) if(inputs[`${r}-${x}`]) return focusCell(r,x);
+}
+
+function highlightCell(r,c) {
+  document.querySelectorAll('.clue').forEach(x=>x.classList.remove('active'));
+  for(const w of words){
+    if(w.d==='across' && r===w.r && c>=w.c && c<w.c+w.a.length)
+      document.querySelector(`.clue[data-id="${w.id}"]`).classList.add('active');
+    if(w.d==='down' && c===w.c && r>=w.r && r<w.r+w.a.length)
+      document.querySelector(`.clue[data-id="${w.id}"]`).classList.add('active');
+  }
+}
+
+function highlightWord(w){
+  document.querySelectorAll('.clue').forEach(x=>x.classList.remove('active'));
+  document.querySelector(`.clue[data-id="${w.id}"]`).classList.add('active');
+}
+
+function getUser(w){
+  let s='';
+  [...w.a].forEach((_,i)=>{
+    const r=w.r+(w.d==='down'?i:0), c=w.c+(w.d==='across'?i:0);
+    s += inputs[`${r}-${c}`]?.value || '';
+  });
+  return s;
+}
+
+function checkAnswers(){
+  let correct=0, filled=0;
+  words.forEach(w=>{
+    const u=getUser(w);
+    if(u.length===w.a.length) filled++;
+    if(u===w.a) correct++;
+  });
+
+  const status=document.getElementById('status');
+  if(correct===words.length){
+    status.className='status good';
+    status.textContent='🎉 Отлично! Кроссворд решён полностью.';
+  } else {
+    status.className='status ' + (correct ? '' : 'bad');
+    status.textContent=`Правильных слов: ${correct} из ${words.length}. Заполненных полностью: ${filled}.`;
+  }
+  updateScore();
+}
+
+function updateScore(){
+  let n=0;
+  Object.values(inputs).forEach(i=>{if(i.value)n++});
+  document.getElementById('score').textContent=`Заполнено: ${n} / ${Object.keys(inputs).length} клеток`;
+}
+
+function clearGrid(){
+  Object.values(inputs).forEach(i=>i.value='');
+  document.getElementById('status').className='status';
+  document.getElementById('status').textContent='Поле очищено. Удачи!';
+  updateScore();
+}
+
+function showAnswers(){
+  words.forEach(w=>[...w.a].forEach((ch,i)=>{
+    const r=w.r+(w.d==='down'?i:0), c=w.c+(w.d==='across'?i:0);
+    inputs[`${r}-${c}`].value=ch;
+  }));
+  document.getElementById('status').className='status good';
+  document.getElementById('status').textContent='Ответы показаны.';
+  updateScore();
+}
+
+function showHint(){
+  const empty = words.find(w => getUser(w) !== w.a);
+  if(!empty) return;
+  const current=getUser(empty);
+  const idx=current.length;
+  const ch=empty.a[idx] || empty.a[0];
+  const r=empty.r+(empty.d==='down'?idx:0), c=empty.c+(empty.d==='across'?idx:0);
+  inputs[`${r}-${c}`].value=ch;
+  inputs[`${r}-${c}`].focus();
+  document.getElementById('status').className='status';
+  document.getElementById('status').textContent=`Подсказка: вписана одна буква в слове №${empty.id}.`;
+  updateScore();
+}
+updateScore();
+</script>
+</body>
+</html>
